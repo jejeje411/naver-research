@@ -150,7 +150,7 @@ def parse_list_page(html_text):
             "title": title_a.get_text(strip=True),
             "url": urljoin(BASE + "/research/", href),
             "broker": tds[2].get_text(strip=True) if len(tds) > 2 else "",
-            "pdf": pdf_a.get("href") if pdf_a else None,
+            "pdf": urljoin(BASE + "/research/", pdf_a.get("href")) if pdf_a else None,
             "date": date,
         })
     return rows
@@ -509,7 +509,7 @@ function render(){
     : '<p class="empty">조건에 맞는 종목이 없습니다. 필터를 바꿔보세요.</p>';
   document.querySelectorAll(".rep").forEach(el => {
     const t = () => el.classList.toggle("open");
-    el.onclick = t;
+    el.onclick = e => { if(e.target.closest("a")) return; t(); };
     el.onkeydown = e => { if(e.key==="Enter"||e.key===" "){ e.preventDefault(); t(); } };
   });
 }
