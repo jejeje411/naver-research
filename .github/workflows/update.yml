@@ -1,0 +1,50 @@
+name: 리서치 대시보드 갱신
+
+# 언제 실행할지
+on:
+  schedule:
+    - cron: "0 23 * * *"   # 매일 23:00 UTC = 한국시간 오전 8시
+  workflow_dispatch: {}     # 깃헙 Actions 탭에서 수동 실행 버튼도 생김
+  push:
+    branches: [main]        # 코드 푸시할 때도 한 번 갱신
+
+# Pages 배포에 필요한 권한
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# 동시에 여러 번 안 돌도록
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 코드 가져오기
+        uses: actions/checkout@v4
+
+      - name: 파이썬 설치
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: 패키지 설치
+        run: pip install -r requirements.txt
+
+      - name: 리포트 수집 + 대시보드 생성
+        # --out public/index.html : Pages가 index.html을 메인으로 띄움
+        # --pages 5 : 5페이지(약 150건) 수집. 숫자 늘리면 더 많이 가져옴
+        run: |
+          mkdir -p public
+          python naver_research.py --pages 5 --out public/index.html
+
+      - name: Pages 아티팩트 업로드
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: public
+
+      - name: Pages에 배포
+        uses: actions/deploy-pages@v4
